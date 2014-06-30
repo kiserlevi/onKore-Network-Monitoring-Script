@@ -1,5 +1,5 @@
 #! /usr/bin/python
-# Author: Me
+# Author: Levi Kiser
 # Purpose: SSH into list of devices and run list of commands
 
 import getopt,sys,paramiko,time,glob,sftp,os,stat
