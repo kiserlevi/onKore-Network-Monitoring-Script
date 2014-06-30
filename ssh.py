@@ -2,13 +2,14 @@
 # Author: Me
 # Purpose: SSH into list of devices and run list of commands
 
-import getopt,sys,paramiko,time
+import getopt,sys,paramiko,time,glob,sftp,os,stat
+from os import path
 
 # Ensuring variables exist
 password, commandfile, username, devicefile = "default", "default", "default", "default"
 
 def usage():
-	print "\nOptions: \n-h: help \n-u: username  \n-p: password \n-l: device list \n-c: command list \n\nUsage: ssh.py -u bob -p password -l device-list.txt -c command-list.txt\n"
+	print "\nOptions: \n-h: help \n-u: username  \n-p: password \n-l: device list \n-c: command list \n\nUsage: python ssh.py -u username -p password -l device-list.txt -c command-list.txt\n"
 	return
 
 # This will error if unsupported parameters are received.
@@ -67,13 +68,36 @@ def connect_to(x):
 			ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 			ssh.connect(device, username=username, password=password)
 			stdin, stdout, stderr = ssh.exec_command(command)
-			output = open(device + "_" + command + "_" + time.strftime("%m-%d-%Y") + "_" + time.strftime("%H:%M:%S") + ".out", "w")
+			output = open(device + "_" + command + "_" + time.strftime("%m-%d-%Y") + "_" + time.strftime("%H:%M:%S") + ".kore", "w")
 			output.write("\n\nCommand Issued: "+command+"\n")
 			output.writelines(stdout)
 			output.write("\n")
-			print "Your file has been updated, it is ", device + "_" + command + "_" + time.strftime("%m-%d-%Y") + "_" + time.strftime("%H:%M:%S") + ".out"
+			print "Your file has been updated, it is ", device + "_" + command + "_" + time.strftime("%m-%d-%Y") + "_" + time.strftime("%H:%M:%S") + ".kore"
 			ssh.close()
 connect_to(devices)
 f1.close()
 f2.close()
-# END
+
+#for items in glob.glob("/home/lkiser/Downloads/*.kore"):
+#	os.chmod(items, 0o777);
+
+host = "10.69.74.6"
+port = 22
+
+sftpusername = "lkiser"
+sftppassword = "password"
+
+local_dir = "/home/lkiser/Downloads/*.kore"
+remote_dir = "/home/lkiser/Desktop/Kore_Files"
+with sftp.Server(sftpusername, sftppassword, host, port) as server:
+	for image in glob.glob(local_dir):
+		base = path.basename(image)
+		server.upload(image, path.join(remote_dir, base))
+
+server.close()
+print 'Upload to remote directory complete.'
+
+for files in glob.glob("/home/lkiser/Downloads/*.kore"):
+	os.remove(files)
+
+print 'Files deleted from local directory.'
